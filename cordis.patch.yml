@@ -1,0 +1,3 @@
+- insert:
+    - id: nasdaq100-panel
+      name: '@local/nasdaq100-panel'

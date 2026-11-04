@@ -1,0 +1,22 @@
+# Dependencies (not used today: the plugin has no runtime npm dependencies)
+node_modules/
+.pnpm-store/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Build output (the plugin is plain JS and needs no build step)
+dist/
+*.tgz
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Env & local secrets
+.env
+.env.*
