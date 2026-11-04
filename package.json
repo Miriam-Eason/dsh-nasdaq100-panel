@@ -2,6 +2,7 @@
   "name": "@local/nasdaq100-panel",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Nasdaq-100 index panel: current quote, history chart and plain-language metric interpretation.",
   "exports": {

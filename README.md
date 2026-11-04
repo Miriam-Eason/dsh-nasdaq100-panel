@@ -123,3 +123,9 @@ GET /dsh-nasdaq100/data?range=1y
 ## English
 
 A DeepSeek Harness Web GUI plugin that shows the Nasdaq-100 index (NDX100): live quote snapshot, multi-range history chart with MA50, and plain-language interpretation of trend, momentum, volatility, drawdown, 52-week range, volume, seasonality and the US Dollar Index. Data comes from Eastmoney's public delayed feed (no API key). Install the directory as a DSH bundle via Plugin Manager; a chart icon appears in the sidebar and opens the dashboard as a main panel. Metrics are derived from daily closes and are for research reference only, not investment advice.
+
+## License
+
+本项目基于 [MIT License](LICENSE) 开源，可自由使用、修改与分发（保留版权声明）。
+
+This project is licensed under the [MIT License](LICENSE).
