@@ -58,6 +58,8 @@ window.__ModuleLoader__.load({
       'chart.legend.close': '收盘价',
       'chart.legend.ma': 'MA50',
       'chart.empty': '暂无图表数据',
+      'chart.rangeReturn': '区间涨跌幅',
+      'chart.sinceStart': '自',
       'summary.title': '综合解读',
       'insight.trend.title': '趋势',
       'insight.momentum.title': '动能',
@@ -204,6 +206,8 @@ window.__ModuleLoader__.load({
       'chart.legend.close': 'Close',
       'chart.legend.ma': 'MA50',
       'chart.empty': 'No chart data',
+      'chart.rangeReturn': 'Change since start',
+      'chart.sinceStart': 'Since',
       'summary.title': 'Overall read',
       'insight.trend.title': 'Trend',
       'insight.momentum.title': 'Momentum',
@@ -434,13 +438,18 @@ window.__ModuleLoader__.load({
       return Math.min(1, Math.max(0, position));
     }
 
-    function chartPositive(data) {
+    /** Cumulative change from the first point of the selected chart range to its last point. */
+    function chartReturn(data) {
       const points = data && data.series && data.series.points;
       if (!Array.isArray(points) || points.length < 2) return null;
       const first = points[0] && points[0][1];
       const last = points[points.length - 1] && points[points.length - 1][1];
-      if (!Number.isFinite(first) || !Number.isFinite(last)) return null;
-      return last >= first;
+      return ratioTo(last, first);
+    }
+
+    function chartPositive(data) {
+      const change = chartReturn(data);
+      return change === null ? null : change >= 0;
     }
 
     /* ---------------------------------------------------------------- */
@@ -660,12 +669,11 @@ window.__ModuleLoader__.load({
 
       const activeIndex = hover === null ? geometry.n - 1 : hover;
       const activePoint = points[activeIndex];
-      const previous = activeIndex > 0 ? points[activeIndex - 1] : null;
-      const showDaily = series && series.step === 1;
-      const hoverPct =
-        showDaily && previous && Number.isFinite(previous[1])
-          ? ratioTo(activePoint[1], previous[1])
-          : null;
+      const basePoint = points[0];
+      // Change relative to the first trading day of the selected range, so the
+      // tooltip answers "how much has it moved since this range began?" instead
+      // of showing one day's move.
+      const rangePct = basePoint ? ratioTo(activePoint[1], basePoint[1]) : null;
       const lineColor = geometry.positive
         ? 'var(--dsw-alias-state-success-primary)'
         : 'var(--dsw-alias-state-error-primary)';
@@ -757,11 +765,16 @@ window.__ModuleLoader__.load({
           { className: 'ndx-tooltip', style: { left: tooltipX } },
           h('div', { className: 'ndx-tooltip-date' }, fmtDate(activePoint[0])),
           h('div', { className: 'ndx-tooltip-price' }, fmtPrice(activePoint[1])),
-          Number.isFinite(hoverPct)
+          Number.isFinite(rangePct) && basePoint
             ? h(
                 'div',
-                { className: `ndx-tooltip-change ndx-text-${toneForChange(hoverPct) || 'neutral'}` },
-                fmtSignedPct(hoverPct),
+                { className: 'ndx-tooltip-change' },
+                h('span', { className: 'ndx-tooltip-since' }, `${t('chart.sinceStart')} ${fmtDate(basePoint[0])}`),
+                h(
+                  'span',
+                  { className: `ndx-tooltip-pct ndx-text-${toneForChange(rangePct) || 'neutral'}` },
+                  fmtSignedPct(rangePct),
+                ),
               )
             : null,
           Number.isFinite(activePoint[2])
@@ -1137,6 +1150,7 @@ window.__ModuleLoader__.load({
             : null;
       const changeTone = toneForChange(changeFraction);
       const cards = snapshot ? buildCards(snapshot) : [];
+      const rangeReturn = chartReturn(snapshot);
 
       const header = snapshot
         ? h(
@@ -1289,7 +1303,18 @@ window.__ModuleLoader__.load({
                   h('span', { className: 'ndx-legend-line' }),
                   t('chart.legend.ma'),
                 ),
-                h('span', { className: 'ndx-chart-range' }, `${snapshot.series ? snapshot.series.startDate : ''} → ${snapshot.series ? snapshot.series.endDate : ''}`),
+                h(
+                  'div',
+                  { className: 'ndx-chart-meta' },
+                  h('span', { className: 'ndx-chart-range' }, `${snapshot.series ? snapshot.series.startDate : ''} → ${snapshot.series ? snapshot.series.endDate : ''}`),
+                  Number.isFinite(rangeReturn)
+                    ? h(
+                        'span',
+                        { className: `ndx-chart-return ndx-text-${toneForChange(rangeReturn) || 'neutral'}` },
+                        `${t('chart.rangeReturn')} ${fmtSignedPct(rangeReturn)}`,
+                      )
+                    : null,
+                ),
               ),
               h(PriceChart, { series: snapshot.series, range }),
             ),
@@ -1388,6 +1413,8 @@ window.__ModuleLoader__.load({
 .ndx-legend-dot{width:7px;height:7px;border-radius:50%;background:var(--dsw-alias-state-success-primary)}
 .ndx-legend-line{display:inline-block;width:14px;height:0;margin-left:10px;border-top:1.6px dashed var(--dsw-alias-label-secondary);opacity:.8}
 .ndx-chart-range{font-size:11.5px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums}
+.ndx-chart-meta{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ndx-chart-return{font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums}
 .ndx-chart{position:relative;width:100%;min-height:220px}
 .ndx-chart-svg{display:block;overflow:visible}
 .ndx-chart-grid{stroke:var(--dsw-alias-border-l1);stroke-width:1}
@@ -1398,11 +1425,13 @@ window.__ModuleLoader__.load({
 .ndx-chart-crosshair{stroke:var(--dsw-alias-border-l2);stroke-width:1;stroke-dasharray:3 3}
 .ndx-chart-dot{stroke:var(--dsw-alias-bg-layer-1);stroke-width:2}
 .ndx-chart-empty{display:flex;align-items:center;justify-content:center;height:280px;font-size:13px;color:var(--dsw-alias-label-secondary)}
-.ndx-tooltip{position:absolute;top:4px;transform:translateX(-50%);min-width:104px;padding:8px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:9px;background:var(--dsw-alias-bg-overlay);box-shadow:0 6px 20px rgba(0,0,0,.12);pointer-events:none;font-size:11.5px;line-height:1.5;font-variant-numeric:tabular-nums;z-index:2}
+.ndx-tooltip{position:absolute;top:4px;transform:translateX(-50%);min-width:104px;padding:8px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:9px;background:var(--dsw-alias-bg-overlay);box-shadow:0 6px 20px rgba(0,0,0,.12);pointer-events:none;font-size:11.5px;line-height:1.5;font-variant-numeric:tabular-nums;white-space:nowrap;z-index:2}
 .ndx-tooltip-date{color:var(--dsw-alias-label-secondary)}
 .ndx-tooltip-price{font-size:13.5px;font-weight:600}
 .ndx-tooltip-ma{color:var(--dsw-alias-label-secondary)}
-.ndx-tooltip-change{font-weight:600}
+.ndx-tooltip-change{display:flex;align-items:baseline;gap:6px}
+.ndx-tooltip-since{font-size:10.5px;color:var(--dsw-alias-label-secondary)}
+.ndx-tooltip-pct{font-weight:600}
 .ndx-summary{padding:16px 18px;border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1);margin-bottom:16px}
 .ndx-summary-title{margin:0;font-size:14px;font-weight:600}
 .ndx-summary-intro{margin:8px 0 0;font-size:12.5px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums}

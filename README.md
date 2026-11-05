@@ -8,7 +8,7 @@
 
 - **行情快照**：最新点位、涨跌额 / 涨跌幅、今开、最高、最低、昨收、成交量、52 周区间。
 - **市场状态**：按美东时间自动判断盘前 / 盘中 / 盘后 / 休市，显示数据截至日期。
-- **历史走势图**：1月 / 3月 / 6月 / 今年 / 1年 / 3年 / 5年 / 全部 切换；收盘价面积图 + MA50 均线；悬停显示日期、收盘价、涨跌幅、MA50。
+- **历史走势图**：1月 / 3月 / 6月 / 今年 / 1年 / 3年 / 5年 / 全部 切换；收盘价面积图 + MA50 均线；右上角常驻显示所选区间的累计涨跌幅（区间首个交易日 → 最新收盘）；悬停显示日期、收盘价、自区间起点以来的累计涨跌幅、MA50。
 - **综合解读 + 9 张指标卡**，每个指标都带一句通俗结论：
 
   | 指标 | 内容 |
@@ -61,6 +61,7 @@ git clone https://github.com/Miriam-Eason/dsh-nasdaq100-panel.git
   | RSI(14) | Wilder 平滑；≥70 超买，≤30 超卖 |
   | 区间收益 | 1M/3M/6M/1Y 分别按 21/63/126/252 个交易日计算；3Y、5Y 为年化收益 |
   | 今年以来 | 相对上一年度最后一个交易日收盘价 |
+  | 区间涨跌幅（图表） | 悬停日收盘 ÷ 所选区间首个交易日收盘 − 1；右上角取最新收盘，即「从区间开始至今」的累计涨跌幅 |
   | 波动率 | 日对数收益标准差 × √252，窗口 20 / 60 个交易日 |
   | 回撤 | 距历史最高**收盘价**；历史最大回撤；近一年（252 交易日）最大回撤 |
   | 52 周区间 | 最近 252 个交易日的**盘中**最高 / 最低，分位 =（现价 − 低）/（高 − 低） |
@@ -122,7 +123,7 @@ GET /dsh-nasdaq100/data?range=1y
 
 ## English
 
-A DeepSeek Harness Web GUI plugin that shows the Nasdaq-100 index (NDX100): live quote snapshot, multi-range history chart with MA50, and plain-language interpretation of trend, momentum, volatility, drawdown, 52-week range, volume, seasonality and the US Dollar Index. Data comes from Eastmoney's public delayed feed (no API key). Install the directory as a DSH bundle via Plugin Manager; a chart icon appears in the sidebar and opens the dashboard as a main panel. Metrics are derived from daily closes and are for research reference only, not investment advice.
+A DeepSeek Harness Web GUI plugin that shows the Nasdaq-100 index (NDX100): live quote snapshot, multi-range history chart with MA50, and plain-language interpretation of trend, momentum, volatility, drawdown, 52-week range, volume, seasonality and the US Dollar Index. The chart's tooltip and header show the cumulative change since the first trading day of the selected range instead of a single day's move. Data comes from Eastmoney's public delayed feed (no API key). Install the directory as a DSH bundle via Plugin Manager; a chart icon appears in the sidebar and opens the dashboard as a main panel. Metrics are derived from daily closes and are for research reference only, not investment advice.
 
 ## License
 
